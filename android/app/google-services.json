@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "974807566543",
+    "project_id": "easychat-51794",
+    "storage_bucket": "easychat-51794.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:974807566543:android:45933f325a37ef2b5c4fba",
+        "android_client_info": {
+          "package_name": "com.example.easy_chat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "974807566543-3u86832q70n8snmlok0l68av6hhq8qst.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.easy_chat",
+            "certificate_hash": "ba69e1ee4373c87d837d353ae1beed68ca335ef8"
+          }
+        },
+        {
+          "client_id": "974807566543-kk6kfu5gopg895iejv0vpdjn8fen5tcm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHLgukSyrNqWvw-BD0AmIKi0uDmdQNwjs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "974807566543-kk6kfu5gopg895iejv0vpdjn8fen5tcm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
