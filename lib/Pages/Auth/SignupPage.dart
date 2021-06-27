@@ -1,18 +1,23 @@
 import 'package:easy_chat/Const/Colors.dart';
 import 'package:easy_chat/Const/MyToast.dart';
 import 'package:easy_chat/Const/Size.dart';
-import 'package:easy_chat/Pages/Auth/SignupPage.dart';
+import 'package:easy_chat/MyAPI/ContactsListAPI.dart';
 import 'package:easy_chat/Pages/Tabs/ChatList.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class SignInPage extends StatelessWidget {
-  static const routeName = "Sign in page";
+import 'SignInPage.dart';
+
+class SignUpPage extends StatelessWidget {
+  static const routeName = "Sign up page";
   FirebaseAuth auth = FirebaseAuth.instance;
   final _formKey = GlobalKey<FormState>();
+
+  TextEditingController _fullNameController = TextEditingController();
   TextEditingController _emailController = TextEditingController();
   TextEditingController _passwordController = TextEditingController();
+  TextEditingController _confirmPassController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +33,7 @@ class SignInPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Log in",
+                "Sign up",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.black,
@@ -49,7 +54,7 @@ class SignInPage extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "Good Day!",
+                    "Welcome!",
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: txtColor,
@@ -62,7 +67,7 @@ class SignInPage extends StatelessWidget {
                 height: mediaQuery(context).height * 0.005,
               ),
               Text(
-                "Please sign in to continue",
+                "Please sign up to continue",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.black.withOpacity(0.5),
@@ -70,7 +75,12 @@ class SignInPage extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                height: mediaQuery(context).height * 0.08,
+                height: mediaQuery(context).height * 0.02,
+              ),
+              MyTextField(
+                txtController: _fullNameController,
+                label: "FULL NAME",
+                textInputType: TextInputType.name,
               ),
               MyTextField(
                 txtController: _emailController,
@@ -83,8 +93,14 @@ class SignInPage extends StatelessWidget {
                 textInputType: TextInputType.visiblePassword,
                 obscureTextField: true,
               ),
+              MyTextField(
+                txtController: _confirmPassController,
+                label: "CONFIRM PASSWORD",
+                textInputType: TextInputType.visiblePassword,
+                obscureTextField: true,
+              ),
               SizedBox(
-                height: mediaQuery(context).height * 0.05,
+                height: mediaQuery(context).height * 0.02,
               ),
               Align(
                 alignment: Alignment.bottomRight,
@@ -92,29 +108,29 @@ class SignInPage extends StatelessWidget {
                   height: mediaQuery(context).height * 0.05,
                   width: mediaQuery(context).width * 0.28,
                   child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      primary: btnColor,
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          "LOGIN",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        Spacer(),
-                        Icon(Icons.arrow_forward, color: Colors.white),
-                      ],
-                    ),
                     onPressed: () async {
                       if (!_formKey.currentState.validate()) {
+                        return;
+                      }
+                      if (_passwordController.text !=
+                          _confirmPassController.text) {
+                        showToast(message: "Your password does not match");
                         return;
                       }
                       try {
                         UserCredential userCredential = await FirebaseAuth
                             .instance
-                            .signInWithEmailAndPassword(
+                            .createUserWithEmailAndPassword(
                           email: _emailController.text,
                           password: _passwordController.text,
+                        );
+
+                        Provider.of<ContactsList>(context, listen: false)
+                            .addContact(
+                          userName: _fullNameController.text,
+                          email: userCredential.user.email,
+                          userId: userCredential.user.uid,
+                          isOnline: true,
                         );
 
                         Navigator.pushReplacementNamed(
@@ -122,23 +138,34 @@ class SignInPage extends StatelessWidget {
                           ChatList.routeName,
                         );
                       } on FirebaseAuthException catch (e) {
-                        if (e.code == 'user-not-found') {
-                          print('No user found for that email.');
-                          showToast(message: "No user found for that email.");
-                        } else if (e.code == 'wrong-password') {
-                          print('Wrong password provided for that user.');
-                          showToast(
-                            message: "Wrong password provided for that user.",
-                          );
+                        if (e.code == 'email-already-in-use') {
+                          print('Email already in use.');
+                          showToast(message: "Email already in use.");
                         } else if (e.code == 'invalid-email') {
-                          print('Invalid email.');
+                          print('Invalid email');
                           showToast(message: "Invalid email.");
-                        } else if (e.code == "user-disabled") {
-                          print("User disabled");
-                          showToast(message: "User disabled.");
+                        } else if (e.code == "operation-not-allowed") {
+                          print('Operation not allowed');
+                          showToast(message: "Operation not allowed.");
+                        } else if (e.code == "weak-password") {
+                          print("Weak password");
+                          showToast(message: "Weak password.");
                         }
                       }
                     },
+                    style: ElevatedButton.styleFrom(
+                      primary: btnColor,
+                    ),
+                    child: Row(
+                      children: [
+                        Text(
+                          "SIGNUP",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        Spacer(),
+                        Icon(Icons.arrow_forward, color: Colors.white),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -159,7 +186,7 @@ class SignInPage extends StatelessWidget {
                   InkWell(
                     onTap: () {
                       Navigator.pushReplacementNamed(
-                          context, SignUpPage.routeName);
+                          context, SignInPage.routeName);
                     },
                     child: Text(
                       "Sign up",
@@ -177,51 +204,6 @@ class SignInPage extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class MyTextField extends StatelessWidget {
-  final String label;
-  final TextInputType textInputType;
-  final bool obscureTextField;
-
-  final TextEditingController txtController;
-
-  const MyTextField({
-    this.label,
-    this.textInputType,
-    this.txtController,
-    this.obscureTextField = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 5,
-      child: TextFormField(
-        controller: txtController,
-        keyboardType: textInputType,
-        obscureText: obscureTextField,
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return "This field is required!";
-          } else if (value.length < 3) {
-            return "This field must bigger than three!";
-          }
-          return null;
-        },
-        decoration: InputDecoration(
-          labelText: label,
-          focusedBorder: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          errorBorder: InputBorder.none,
-          disabledBorder: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: mediaQuery(context).width * 0.03,
-            vertical: mediaQuery(context).height * 0.01,
-          ),
-        ),
-      ),
-    );
+    ;
   }
 }
