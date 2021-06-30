@@ -100,17 +100,17 @@ class _MessageListState extends State<MessageList> {
               return myErrorOccurred(context);
             } else {
               return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                // crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  Consumer<MessageListListener>(
-                    builder: (BuildContext context, value, Widget child) {
-                      List<String> listKeys = [];
-                      value.messageList.keys.forEach((element) {
-                        listKeys.add(element);
-                      });
-                      listKeys.sort((a, b) => b.compareTo(a));
-                      return Expanded(
-                        child: ListView.builder(
+                  Expanded(
+                    child: Consumer<MessageListListener>(
+                      builder: (BuildContext context, value, Widget child) {
+                        List<String> listKeys = [];
+                        value.messageList.keys.forEach((element) {
+                          listKeys.add(element);
+                        });
+                        listKeys.sort((a, b) => b.compareTo(a));
+                        return ListView.builder(
                           itemCount: value.messageList.length,
                           reverse: true,
                           itemBuilder: (ctx, index) {
@@ -122,9 +122,9 @@ class _MessageListState extends State<MessageList> {
                                   ["message"],
                             );
                           },
-                        ),
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
                   Container(
                     color: btnColor,
@@ -182,61 +182,155 @@ class _MessageListState extends State<MessageList> {
   }
 }
 
-class ChatItemML extends StatelessWidget {
+class ChatItemML extends StatefulWidget {
   final String message;
   final bool isMe;
 
-  const ChatItemML({
+  ChatItemML({
     Key key,
     this.message,
     this.isMe,
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: isMe ? TextDirection.rtl : TextDirection.ltr,
-      child: Row(
-        children: [
-          Card(
-            elevation: 5,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            margin: EdgeInsets.all(
-              mediaQuery(context).height * 0.01,
-            ),
-            child: Container(
-              padding: EdgeInsets.all(
-                mediaQuery(context).height * 0.01,
-              ),
-              constraints: BoxConstraints(
-                minWidth: mediaQuery(context).width * 0.1,
-                maxWidth: mediaQuery(context).width * 0.9,
-                minHeight: mediaQuery(context).height * 0.03,
-                maxHeight: mediaQuery(context).height,
-              ),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(5),
-                  bottomRight: Radius.circular(5),
-                  topRight: Radius.circular(isMe ? 0 : 5),
-                  topLeft: Radius.circular(isMe ? 5 : 0),
-                  // topLeft: Radius.circular(5),
-                ),
-                color: isMe ? btnColor : Colors.white,
-              ),
-              child: Text(
-                message,
+  _ChatItemMLState createState() => _ChatItemMLState();
+}
+
+class _ChatItemMLState extends State<ChatItemML> {
+  var _tapPosition;
+
+  void _showCustomMenu() {
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject();
+
+    showMenu(
+      context: context,
+      color: btnColor,
+      items: [
+        PopupMenuItem<int>(
+          value: 0,
+          child: Row(
+            children: [
+              Icon(Icons.edit, color: Colors.black.withOpacity(0.5)),
+              SizedBox(width: 5),
+              Text(
+                'Edit',
                 style: TextStyle(color: Colors.black.withOpacity(0.5)),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
+        PopupMenuItem<int>(
+          value: 1,
+          child: Row(
+            children: [
+              Icon(Icons.delete, color: Colors.black.withOpacity(0.5)),
+              SizedBox(width: 5),
+              Text(
+                'Delete',
+                style: TextStyle(color: Colors.black.withOpacity(0.5)),
+              ),
+            ],
+          ),
+        ),
+      ],
+      position: RelativeRect.fromRect(
+        _tapPosition & const Size(40, 40),
+        Offset.zero & overlay.size,
+      ),
+    ).then<void>((int delta) {
+      if (delta == null) return;
+    });
+  }
+
+  void _storePosition(TapDownDetails details) {
+    _tapPosition = details.globalPosition;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.isMe ? _showCustomMenu : null,
+      onTapDown: _storePosition,
+      child: Directionality(
+        textDirection: widget.isMe ? TextDirection.rtl : TextDirection.ltr,
+        child: Row(
+          children: [
+            Card(
+              elevation: 5,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              margin: EdgeInsets.all(
+                mediaQuery(context).height * 0.01,
+              ),
+              child: Container(
+                padding: EdgeInsets.all(
+                  mediaQuery(context).height * 0.01,
+                ),
+                constraints: BoxConstraints(
+                  minWidth: mediaQuery(context).width * 0.1,
+                  maxWidth: mediaQuery(context).width * 0.9,
+                  minHeight: mediaQuery(context).height * 0.03,
+                  maxHeight: mediaQuery(context).height,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(5),
+                    bottomRight: Radius.circular(5),
+                    topRight: Radius.circular(widget.isMe ? 0 : 5),
+                    topLeft: Radius.circular(widget.isMe ? 5 : 0),
+                    // topLeft: Radius.circular(5),
+                  ),
+                  color: widget.isMe ? btnColor : Colors.white,
+                ),
+                child: Text(
+                  widget.message,
+                  style: TextStyle(color: Colors.black.withOpacity(0.5)),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
+// class PlusMinusEntry extends PopupMenuEntry<int> {
+//   @override
+//   double height = 200;
+//
+//   // height doesn't matter, as long as we are not giving
+//   // initialValue to showMenu().
+//
+//   @override
+//   bool represents(int n) => n == 1 || n == -1;
+//
+//   @override
+//   PlusMinusEntryState createState() => PlusMinusEntryState();
+// }
+//
+// class PlusMinusEntryState extends State<PlusMinusEntry> {
+//   void _plus1() {
+//     // This is how you close the popup menu and return user selection.
+//     Navigator.pop<int>(context, 1);
+//   }
+//
+//   void _minus1() {
+//     Navigator.pop<int>(context, -1);
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Column(
+//       children: <Widget>[
+//         Text('+1'),
+//         Text('-1'),
+//       ],
+//     );
+//   }
+// }
+
 // return SizedBox(
 //   width: 10,
 //   height: 10,

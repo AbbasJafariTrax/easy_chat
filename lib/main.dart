@@ -1,15 +1,17 @@
+import 'package:easy_chat/Const/Colors.dart';
 import 'package:easy_chat/MyAPI/ContactsListAPI.dart';
 import 'package:easy_chat/MyAPI/MessageListAPI.dart';
 import 'package:easy_chat/Pages/Auth/SignupPage.dart';
-import 'package:easy_chat/Pages/Tabs/ChatList.dart';
-import 'package:easy_chat/Pages/Tabs/MessageList.dart';
+import 'package:easy_chat/Pages/Tabs/ChatTabs/ChatList.dart';
+import 'package:easy_chat/Pages/Tabs/ChatTabs/MessageList.dart';
+import 'package:easy_chat/Pages/Tabs/TabPages.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import './Pages/Auth/SignInPage.dart';
-import 'Pages/Auth/MySplashScreen.dart';
+import './Pages/Auth/MySplashScreen.dart';
 import 'TestFile.dart';
 
 void main() async {
@@ -47,8 +49,10 @@ class _MyAppState extends State<MyApp> {
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
+        primaryColor: btnColor,
         primarySwatch: Colors.blue,
       ),
+      // home: TabPages(),
       home: mUser != null ? ChatList() : SignInPage(),
       routes: {
         MySplashScreen.routeName: (context) => MySplashScreen(),

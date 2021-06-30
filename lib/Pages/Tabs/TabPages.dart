@@ -1,17 +1,19 @@
 import 'package:easy_chat/Const/Colors.dart';
+import 'package:easy_chat/Pages/Tabs/AllUsersPage.dart';
+import 'package:easy_chat/Pages/Tabs/ProfilePage.dart';
 import 'package:easy_chat/Pages/Tabs/ChatTabs/ChatList.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.dart';
 
-class TestFile extends StatelessWidget {
+class TabPages extends StatelessWidget {
   PersistentTabController _controller;
 
   List<Widget> _buildScreens() {
     return [
-      Text("Testing"),
+      AllUsersPage(),
       ChatList(),
-      Text("Testing"),
+      ProfilePage(),
     ];
   }
 

@@ -2,12 +2,12 @@ import 'package:easy_chat/Const/Colors.dart';
 import 'package:easy_chat/Const/MyToast.dart';
 import 'package:easy_chat/Const/Size.dart';
 import 'package:easy_chat/MyAPI/ContactsListAPI.dart';
-import 'package:easy_chat/Pages/Tabs/ChatList.dart';
+import 'package:easy_chat/Pages/Auth/SignInPage.dart';
+import 'package:easy_chat/Pages/Tabs/ChatTabs/ChatList.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'SignInPage.dart';
 
 class SignUpPage extends StatelessWidget {
   static const routeName = "Sign up page";
@@ -77,23 +77,23 @@ class SignUpPage extends StatelessWidget {
               SizedBox(
                 height: mediaQuery(context).height * 0.02,
               ),
-              MyTextField(
+              MyTextFieldAuth(
                 txtController: _fullNameController,
                 label: "FULL NAME",
                 textInputType: TextInputType.name,
               ),
-              MyTextField(
+              MyTextFieldAuth(
                 txtController: _emailController,
                 label: "EMAIL",
                 textInputType: TextInputType.emailAddress,
               ),
-              MyTextField(
+              MyTextFieldAuth(
                 txtController: _passwordController,
                 label: "PASSWORD",
                 textInputType: TextInputType.visiblePassword,
                 obscureTextField: true,
               ),
-              MyTextField(
+              MyTextFieldAuth(
                 txtController: _confirmPassController,
                 label: "CONFIRM PASSWORD",
                 textInputType: TextInputType.visiblePassword,
