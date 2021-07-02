@@ -1,10 +1,14 @@
 import 'package:easy_chat/Const/Colors.dart';
+import 'package:easy_chat/Const/MProgressDialog.dart';
+import 'package:easy_chat/Const/MToast.dart';
 import 'package:easy_chat/Const/MyConnectionError.dart';
 import 'package:easy_chat/Const/Size.dart';
 import 'package:easy_chat/MyAPI/MessageListAPI.dart';
+import 'package:easy_chat/Widgets/ChatTabsWidget/MessageListWidget/ChatItemML.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:progress_dialog/progress_dialog.dart';
 import 'package:provider/provider.dart';
 
 class MessageList extends StatefulWidget {
@@ -19,6 +23,7 @@ class _MessageListState extends State<MessageList> {
   Future<MessageListListener> _mFuture;
   String args;
   bool isLoading = true;
+  String mUserId;
 
   @override
   void dispose() {
@@ -32,13 +37,21 @@ class _MessageListState extends State<MessageList> {
     // TODO: implement initState
     super.initState();
 
+    mUserId = FirebaseAuth.instance.currentUser.uid;
+
     Future.delayed(Duration.zero, () {
       args = ModalRoute.of(context).settings.arguments;
 
       Provider.of<MessageListListener>(context, listen: false)
           .messageAddListener(
         receiverId: args,
-        userId: FirebaseAuth.instance.currentUser.uid,
+        userId: mUserId,
+      );
+
+      Provider.of<MessageListListener>(context, listen: false)
+          .messageDeleteListener(
+        receiverId: args,
+        userId: mUserId,
       );
 
       _mFuture = Provider.of<MessageListListener>(
@@ -47,7 +60,7 @@ class _MessageListState extends State<MessageList> {
       )
           .getAllMessage(
         receiverId: args,
-        userId: FirebaseAuth.instance.currentUser.uid,
+        userId: mUserId,
       )
           .whenComplete(() {
         setState(() {
@@ -117,9 +130,12 @@ class _MessageListState extends State<MessageList> {
                             return ChatItemML(
                               isMe: value.messageList[listKeys[index]]
                                       ["senderId"] ==
-                                  FirebaseAuth.instance.currentUser.uid,
+                                  mUserId,
                               message: value.messageList[listKeys[index]]
                                   ["message"],
+                              msgId: listKeys[index],
+                              receiverId: args,
+                              userId: mUserId,
                             );
                           },
                         );
@@ -157,7 +173,7 @@ class _MessageListState extends State<MessageList> {
                             Provider.of<MessageListListener>(context,
                                     listen: false)
                                 .sendMessage(
-                              userId: FirebaseAuth.instance.currentUser.uid,
+                              userId: mUserId,
                               message: sendCtrl.text,
                               receiverId: args,
                             );
@@ -177,120 +193,6 @@ class _MessageListState extends State<MessageList> {
             }
           }
         },
-      ),
-    );
-  }
-}
-
-class ChatItemML extends StatefulWidget {
-  final String message;
-  final bool isMe;
-
-  ChatItemML({
-    Key key,
-    this.message,
-    this.isMe,
-  }) : super(key: key);
-
-  @override
-  _ChatItemMLState createState() => _ChatItemMLState();
-}
-
-class _ChatItemMLState extends State<ChatItemML> {
-  var _tapPosition;
-
-  void _showCustomMenu() {
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject();
-
-    showMenu(
-      context: context,
-      color: btnColor,
-      items: [
-        PopupMenuItem<int>(
-          value: 0,
-          child: Row(
-            children: [
-              Icon(Icons.edit, color: Colors.black.withOpacity(0.5)),
-              SizedBox(width: 5),
-              Text(
-                'Edit',
-                style: TextStyle(color: Colors.black.withOpacity(0.5)),
-              ),
-            ],
-          ),
-        ),
-        PopupMenuItem<int>(
-          value: 1,
-          child: Row(
-            children: [
-              Icon(Icons.delete, color: Colors.black.withOpacity(0.5)),
-              SizedBox(width: 5),
-              Text(
-                'Delete',
-                style: TextStyle(color: Colors.black.withOpacity(0.5)),
-              ),
-            ],
-          ),
-        ),
-      ],
-      position: RelativeRect.fromRect(
-        _tapPosition & const Size(40, 40),
-        Offset.zero & overlay.size,
-      ),
-    ).then<void>((int delta) {
-      if (delta == null) return;
-    });
-  }
-
-  void _storePosition(TapDownDetails details) {
-    _tapPosition = details.globalPosition;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.isMe ? _showCustomMenu : null,
-      onTapDown: _storePosition,
-      child: Directionality(
-        textDirection: widget.isMe ? TextDirection.rtl : TextDirection.ltr,
-        child: Row(
-          children: [
-            Card(
-              elevation: 5,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: EdgeInsets.all(
-                mediaQuery(context).height * 0.01,
-              ),
-              child: Container(
-                padding: EdgeInsets.all(
-                  mediaQuery(context).height * 0.01,
-                ),
-                constraints: BoxConstraints(
-                  minWidth: mediaQuery(context).width * 0.1,
-                  maxWidth: mediaQuery(context).width * 0.9,
-                  minHeight: mediaQuery(context).height * 0.03,
-                  maxHeight: mediaQuery(context).height,
-                ),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(5),
-                    bottomRight: Radius.circular(5),
-                    topRight: Radius.circular(widget.isMe ? 0 : 5),
-                    topLeft: Radius.circular(widget.isMe ? 5 : 0),
-                    // topLeft: Radius.circular(5),
-                  ),
-                  color: widget.isMe ? btnColor : Colors.white,
-                ),
-                child: Text(
-                  widget.message,
-                  style: TextStyle(color: Colors.black.withOpacity(0.5)),
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

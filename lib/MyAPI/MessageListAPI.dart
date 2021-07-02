@@ -30,6 +30,7 @@ class MessageListListener extends ChangeNotifier {
 
   final DBRef = FirebaseDatabase.instance.reference().child('ChatList');
 
+  //TODO Set
   Future<void> sendMessage({
     String message,
     String userId,
@@ -60,6 +61,29 @@ class MessageListListener extends ChangeNotifier {
     }
   }
 
+  Future<void> deleteSingleMessage({
+    String msgId,
+    String userId,
+    String receiverId,
+  }) async {
+    String route = "";
+
+    print(
+        "Mahdi: sendMessage: $userId : $receiverId : ${DateTime.now().millisecondsSinceEpoch.toString()}");
+
+    if (userId.compareTo(receiverId) == -1) {
+      route = userId + receiverId;
+    } else {
+      route = receiverId + userId;
+    }
+    try {
+      await DBRef.child(route).child(msgId).remove();
+    } catch (e) {
+      print("Mahdi: deleteSingleMessage: error: $e");
+    }
+  }
+
+  //TODO get and listen
   Future<MessageListListener> getAllMessage(
       {String userId, String receiverId}) async {
     try {
@@ -115,6 +139,31 @@ class MessageListListener extends ChangeNotifier {
                   "message": event.snapshot.value["message"],
                   "senderId": event.snapshot.value["senderId"],
                 });
+        notifyListeners();
+      });
+    } catch (e) {
+      print("Mahdi: messageAddListener: error: $e");
+    }
+  }
+
+  void messageDeleteListener({String userId, String receiverId}) {
+    try {
+      String route = "";
+
+      print("Mahdi: messageDeleteListener: $userId : $receiverId");
+
+      if (userId.compareTo(receiverId) == -1) {
+        route = userId + receiverId;
+      } else {
+        route = receiverId + userId;
+      }
+
+      DBRef.child(route).onChildRemoved.listen((event) {
+        print(
+            "Mahdi: messageDeleteListener 1 ${event.snapshot.key} : ${event.snapshot.value}");
+        print("Mahdi: messageDeleteListener 2 ${DBRef.child(route).path}");
+
+        _messageList.remove(event.snapshot.key);
         notifyListeners();
       });
     } catch (e) {
