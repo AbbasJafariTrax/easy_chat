@@ -20,10 +20,16 @@ class MessageList extends StatefulWidget {
 
 class _MessageListState extends State<MessageList> {
   TextEditingController sendCtrl = TextEditingController();
+  FocusNode sendFocus = FocusNode();
+
   Future<MessageListListener> _mFuture;
   String args;
   bool isLoading = true;
   String mUserId;
+  var _tapPosition;
+  ProgressDialog pr;
+  bool isEdit = false;
+  String mSenderId, mMsgId;
 
   @override
   void dispose() {
@@ -38,21 +44,10 @@ class _MessageListState extends State<MessageList> {
     super.initState();
 
     mUserId = FirebaseAuth.instance.currentUser.uid;
+    pr = ProgressDialog(context);
 
     Future.delayed(Duration.zero, () {
       args = ModalRoute.of(context).settings.arguments;
-
-      Provider.of<MessageListListener>(context, listen: false)
-          .messageAddListener(
-        receiverId: args,
-        userId: mUserId,
-      );
-
-      Provider.of<MessageListListener>(context, listen: false)
-          .messageDeleteListener(
-        receiverId: args,
-        userId: mUserId,
-      );
 
       _mFuture = Provider.of<MessageListListener>(
         context,
@@ -67,7 +62,94 @@ class _MessageListState extends State<MessageList> {
           isLoading = false;
         });
       });
+
+      //TODO Listener
+      Provider.of<MessageListListener>(context, listen: false)
+          .messageAddListener(
+        receiverId: args,
+        userId: mUserId,
+      );
+
+      Provider.of<MessageListListener>(context, listen: false)
+          .messageDeleteListener(
+        receiverId: args,
+        userId: mUserId,
+      );
+
+      Provider.of<MessageListListener>(context, listen: false)
+          .messageEditListener(
+        receiverId: args,
+        userId: mUserId,
+      );
     });
+  }
+
+  void _showCustomMenu({String msgId, String msgTxt, String senderId}) {
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject();
+
+    showMenu(
+      context: context,
+      color: btnColor,
+      items: [
+        PopupMenuItem<int>(
+          value: 0,
+          child: Row(
+            children: [
+              Icon(Icons.edit, color: Colors.black.withOpacity(0.5)),
+              SizedBox(width: 5),
+              Text(
+                'Edit',
+                style: TextStyle(color: Colors.black.withOpacity(0.5)),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem<int>(
+          value: 1,
+          child: Row(
+            children: [
+              Icon(Icons.delete, color: Colors.black.withOpacity(0.5)),
+              SizedBox(width: 5),
+              Text(
+                'Delete',
+                style: TextStyle(color: Colors.black.withOpacity(0.5)),
+              ),
+            ],
+          ),
+        ),
+      ],
+      position: RelativeRect.fromRect(
+        _tapPosition & const Size(40, 40),
+        Offset.zero & overlay.size,
+      ),
+    ).then<void>((int delta) {
+      if (delta == null)
+        return;
+      else if (delta == 1) {
+        mProgressDialog(pr: pr, msg: "Deleting Message");
+        pr.show();
+        Provider.of<MessageListListener>(context, listen: false)
+            .deleteSingleMessage(
+          msgId: msgId,
+          receiverId: args,
+          userId: mUserId,
+        )
+            .whenComplete(() {
+          if (pr.isShowing()) pr.hide();
+          mToast(msg: "Message Deleted");
+        });
+      } else if (delta == 0) {
+        if (!sendFocus.hasFocus) sendFocus.requestFocus();
+        sendCtrl.text = msgTxt;
+        isEdit = true;
+        mSenderId = senderId;
+        mMsgId = msgId;
+      }
+    });
+  }
+
+  void _storePosition(TapDownDetails details) {
+    _tapPosition = details.globalPosition;
   }
 
   @override
@@ -127,15 +209,35 @@ class _MessageListState extends State<MessageList> {
                           itemCount: value.messageList.length,
                           reverse: true,
                           itemBuilder: (ctx, index) {
-                            return ChatItemML(
-                              isMe: value.messageList[listKeys[index]]
-                                      ["senderId"] ==
-                                  mUserId,
-                              message: value.messageList[listKeys[index]]
-                                  ["message"],
-                              msgId: listKeys[index],
-                              receiverId: args,
-                              userId: mUserId,
+                            return GestureDetector(
+                              onTap: value.messageList[listKeys[index]]
+                                          ["senderId"] ==
+                                      mUserId
+                                  ? () => _showCustomMenu(
+                                        msgId: listKeys[index],
+                                        msgTxt:
+                                            value.messageList[listKeys[index]]
+                                                ["message"],
+                                        senderId:
+                                            value.messageList[listKeys[index]]
+                                                ["senderId"],
+                                      )
+                                  : null,
+                              onTapDown: _storePosition,
+                              child: ChatItemML(
+                                senderId: value.messageList[listKeys[index]]
+                                    ["senderId"],
+                                message: value.messageList[listKeys[index]]
+                                    ["message"],
+                                isEdited: value.messageList[listKeys[index]]
+                                            ["edited"] ==
+                                        true
+                                    ? true
+                                    : false,
+                                msgId: listKeys[index],
+                                receiverId: args,
+                                userId: mUserId,
+                              ),
                             );
                           },
                         );
@@ -170,13 +272,27 @@ class _MessageListState extends State<MessageList> {
                         ),
                         InkWell(
                           onTap: () {
-                            Provider.of<MessageListListener>(context,
-                                    listen: false)
-                                .sendMessage(
-                              userId: mUserId,
-                              message: sendCtrl.text,
-                              receiverId: args,
-                            );
+                            if (isEdit) {
+                              isEdit = false;
+                              Provider.of<MessageListListener>(context,
+                                      listen: false)
+                                  .editSingleMessage(
+                                msg: sendCtrl.text,
+                                senderId: mSenderId,
+                                msgId: mMsgId,
+                                userId: mUserId,
+                                receiverId: args,
+                              );
+                            } else {
+                              Provider.of<MessageListListener>(
+                                context,
+                                listen: false,
+                              ).sendMessage(
+                                userId: mUserId,
+                                message: sendCtrl.text,
+                                receiverId: args,
+                              );
+                            }
                             sendCtrl.text = "";
                           },
                           child: Icon(

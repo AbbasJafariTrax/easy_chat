@@ -16,13 +16,7 @@ class MessageListModel {
 }
 
 class MessageListListener extends ChangeNotifier {
-  // StreamSubscription<Event> addListenerVar;
-  // StreamSubscription<Event> editListenerVar;
-  // StreamSubscription<Event> deleteListenerVar;
-
   Map<String, dynamic> _messageList = {};
-
-  // List<MessageListModel> _messageList = [];
 
   Map<String, dynamic> get messageList {
     return _messageList;
@@ -50,12 +44,11 @@ class MessageListListener extends ChangeNotifier {
     try {
       await DBRef.child(route)
           .child(DateTime.now().millisecondsSinceEpoch.toString())
-          .set(
-        {
-          "message": message,
-          "senderId": userId,
-        },
-      );
+          .set({
+        "message": message,
+        "senderId": userId,
+        "edited": false,
+      });
     } catch (e) {
       print("Mahdi: addContact: error: $e");
     }
@@ -69,7 +62,7 @@ class MessageListListener extends ChangeNotifier {
     String route = "";
 
     print(
-        "Mahdi: sendMessage: $userId : $receiverId : ${DateTime.now().millisecondsSinceEpoch.toString()}");
+        "Mahdi: deleteSingleMessage: $userId : $receiverId : ${DateTime.now().millisecondsSinceEpoch.toString()}");
 
     if (userId.compareTo(receiverId) == -1) {
       route = userId + receiverId;
@@ -83,13 +76,41 @@ class MessageListListener extends ChangeNotifier {
     }
   }
 
+  Future<void> editSingleMessage({
+    String msgId,
+    String userId,
+    String receiverId,
+    String senderId,
+    String msg,
+  }) async {
+    String route = "";
+
+    print(
+        "Mahdi: editSingleMessage: $userId : $receiverId : ${DateTime.now().millisecondsSinceEpoch.toString()}");
+
+    if (userId.compareTo(receiverId) == -1) {
+      route = userId + receiverId;
+    } else {
+      route = receiverId + userId;
+    }
+    try {
+      await DBRef.child(route).child(msgId).set({
+        "message": msg,
+        "senderId": senderId,
+        "edited": true,
+      });
+    } catch (e) {
+      print("Mahdi: editSingleMessage: error: $e");
+    }
+  }
+
   //TODO get and listen
   Future<MessageListListener> getAllMessage(
       {String userId, String receiverId}) async {
     try {
       String route = "";
 
-      print("Mahdi: sendMessage: $userId : $receiverId");
+      print("Mahdi: getAllMessage: $userId : $receiverId");
 
       if (userId.compareTo(receiverId) == -1) {
         route = userId + receiverId;
@@ -106,6 +127,7 @@ class MessageListListener extends ChangeNotifier {
               () => {
                     "message": value["message"],
                     "senderId": value["senderId"],
+                    "edited": value["edited"],
                   });
         });
       });
@@ -120,7 +142,7 @@ class MessageListListener extends ChangeNotifier {
     try {
       String route = "";
 
-      print("Mahdi: sendMessage: $userId : $receiverId");
+      print("Mahdi: messageAddListener: $userId : $receiverId");
 
       if (userId.compareTo(receiverId) == -1) {
         route = userId + receiverId;
@@ -138,6 +160,7 @@ class MessageListListener extends ChangeNotifier {
             () => {
                   "message": event.snapshot.value["message"],
                   "senderId": event.snapshot.value["senderId"],
+                  "edited": event.snapshot.value["edited"],
                 });
         notifyListeners();
       });
@@ -168,6 +191,37 @@ class MessageListListener extends ChangeNotifier {
       });
     } catch (e) {
       print("Mahdi: messageAddListener: error: $e");
+    }
+  }
+
+  void messageEditListener({String userId, String receiverId}) {
+    try {
+      String route = "";
+
+      print("Mahdi: messageEditListener: $userId : $receiverId");
+
+      if (userId.compareTo(receiverId) == -1) {
+        route = userId + receiverId;
+      } else {
+        route = receiverId + userId;
+      }
+
+      DBRef.child(route).onChildChanged.listen((event) {
+        print(
+            "Mahdi: messageEditListener 1 ${event.snapshot.key} : ${event.snapshot.value}");
+        print("Mahdi: messageEditListener 2 ${DBRef.child(route).path}");
+
+        if (_messageList.containsKey(event.snapshot.key)) {
+          _messageList[event.snapshot.key] = {
+            "message": event.snapshot.value["message"],
+            "senderId": event.snapshot.value["senderId"],
+            "edited": event.snapshot.value["edited"],
+          };
+        }
+        notifyListeners();
+      });
+    } catch (e) {
+      print("Mahdi: messageEditListener: error: $e");
     }
   }
 }
