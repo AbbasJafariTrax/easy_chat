@@ -90,18 +90,37 @@ class ProfilePage extends StatelessWidget {
               mTextInputType: TextInputType.phone,
             ),
             SizedBox(height: mediaQuery(context).height * 0.08),
-            ElevatedButton.icon(
-              onPressed: () {
-                FirebaseAuth.instance.signOut();
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  SignInPage.routeName,
-                  (route) => false,
-                );
-              },
-              icon: Icon(Icons.exit_to_app),
-              style: ElevatedButton.styleFrom(primary: btnColor),
-              label: Text("Sign Out"),
+            SizedBox(
+              width: mediaQuery(context).width * 0.3,
+              child: ElevatedButton.icon(
+                icon: Icon(Icons.save),
+                label: Text("Save"),
+                style: ElevatedButton.styleFrom(
+                  primary: btnColor,
+                  alignment: Alignment.centerLeft,
+                ),
+                onPressed: () {},
+              ),
+            ),
+            SizedBox(
+              width: mediaQuery(context).width * 0.3,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  if (FirebaseAuth.instance.currentUser.uid != null)
+                    FirebaseAuth.instance.signOut();
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(builder: (context) => SignInPage()),
+                    (route) => false,
+                  );
+                },
+                icon: Icon(Icons.exit_to_app),
+                style: ElevatedButton.styleFrom(
+                  primary: btnColor,
+                  alignment: Alignment.centerLeft,
+                ),
+                label: Text("Sign Out"),
+              ),
             ),
           ],
         ),

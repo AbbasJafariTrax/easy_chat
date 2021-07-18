@@ -12,7 +12,7 @@ import 'package:progress_dialog/progress_dialog.dart';
 import 'package:provider/provider.dart';
 
 class MessageList extends StatefulWidget {
-  static const routeName = "Message list";
+  static const routeName = "/Message list";
 
   @override
   _MessageListState createState() => _MessageListState();

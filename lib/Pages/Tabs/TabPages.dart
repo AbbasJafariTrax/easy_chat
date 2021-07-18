@@ -42,7 +42,7 @@ class TabPages extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    _controller = PersistentTabController(initialIndex: 0);
+    _controller = PersistentTabController(initialIndex: 1);
 
     return PersistentTabView(
       context,

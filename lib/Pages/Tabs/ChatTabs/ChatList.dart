@@ -151,6 +151,14 @@ class SingleChatWidget extends StatelessWidget {
       return ListView.builder(
         itemCount: value.userList.length,
         itemBuilder: (ctx, index) {
+          if (FirebaseAuth.instance.currentUser == null) {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              SignInPage.routeName,
+              (route) => false,
+            );
+            return SizedBox.shrink();
+          }
           return FirebaseAuth.instance.currentUser.uid == listKeys[index]
               ? SizedBox.shrink()
               : ContactItems(

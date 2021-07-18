@@ -53,7 +53,7 @@ class _MyAppState extends State<MyApp> {
         primarySwatch: Colors.blue,
       ),
       // home: TabPages(),
-      home: mUser != null ? ChatList() : SignInPage(),
+      home: mUser != null ? TabPages() : SignInPage(),
       routes: {
         MySplashScreen.routeName: (context) => MySplashScreen(),
         SignUpPage.routeName: (context) => SignUpPage(),
