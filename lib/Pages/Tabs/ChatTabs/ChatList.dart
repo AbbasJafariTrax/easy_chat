@@ -159,13 +159,13 @@ class SingleChatWidget extends StatelessWidget {
             );
             return SizedBox.shrink();
           }
-          return FirebaseAuth.instance.currentUser.uid == listKeys[index]
+          return FirebaseAuth.instance.currentUser.uid == value.userList[listKeys[index]]["uId"]
               ? SizedBox.shrink()
               : ContactItems(
                   isAvailable: value.userList[listKeys[index]]["isOnline"],
                   contactName: value.userList[listKeys[index]]["userName"],
                   imageUrl: "assets/images/empty_profile.jpg",
-                  contactId: listKeys[index],
+                  contactId: value.userList[listKeys[index]]["uId"],
                 );
         },
       );

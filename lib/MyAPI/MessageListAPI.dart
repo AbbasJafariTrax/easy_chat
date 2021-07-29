@@ -105,12 +105,18 @@ class MessageListListener extends ChangeNotifier {
   }
 
   //TODO get and listen
-  Future<MessageListListener> getAllMessage(
-      {String userId, String receiverId}) async {
+  Future<MessageListListener> getAllMessage({
+    String userId,
+    String receiverId,
+  }) async {
     try {
       String route = "";
 
       print("Mahdi: getAllMessage: $userId : $receiverId");
+
+      if (_messageList.isNotEmpty) {
+        _messageList.clear();
+      }
 
       if (userId.compareTo(receiverId) == -1) {
         route = userId + receiverId;

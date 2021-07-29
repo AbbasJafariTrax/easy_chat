@@ -1,6 +1,7 @@
 import 'package:easy_chat/Const/Colors.dart';
 import 'package:easy_chat/MyAPI/ContactsListAPI.dart';
 import 'package:easy_chat/MyAPI/MessageListAPI.dart';
+import 'package:easy_chat/MyAPI/PhoneCodeManagement.dart';
 import 'package:easy_chat/Pages/Auth/SignupPage.dart';
 import 'package:easy_chat/Pages/Tabs/ChatTabs/ChatList.dart';
 import 'package:easy_chat/Pages/Tabs/ChatTabs/MessageList.dart';
@@ -21,6 +22,7 @@ void main() async {
     MultiProvider(
       providers: [
         ListenableProvider<ContactsList>(create: (_) => ContactsList()),
+        ListenableProvider<PhoneCodeManagement>(create: (_) => PhoneCodeManagement()),
         ListenableProvider<MessageListListener>(
             create: (_) => MessageListListener()),
       ],
@@ -56,7 +58,7 @@ class _MyAppState extends State<MyApp> {
       home: mUser != null ? TabPages() : SignInPage(),
       routes: {
         MySplashScreen.routeName: (context) => MySplashScreen(),
-        SignUpPage.routeName: (context) => SignUpPage(),
+        // SignUpPage.routeName: (context) => SignUpPage(),
         SignInPage.routeName: (context) => SignInPage(),
         ChatList.routeName: (context) => ChatList(),
         MessageList.routeName: (context) => MessageList(),

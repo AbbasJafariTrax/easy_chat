@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:easy_chat/Const/SharedPrefsKeys.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserModel {
   String userId;
@@ -19,6 +21,8 @@ class UserModel {
 }
 
 class ContactsList extends ChangeNotifier {
+  Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+
   StreamSubscription<Event> addListenerVar;
   StreamSubscription<Event> editListenerVar;
   StreamSubscription<Event> deleteListenerVar;
@@ -31,32 +35,83 @@ class ContactsList extends ChangeNotifier {
 
   final DBRef = FirebaseDatabase.instance.reference().child('Users');
 
+  Future<DataSnapshot> getUserProfile({String phoneNum}) async {
+    try {
+      print("Mahdi: getUserProfile $phoneNum");
+      print("Mahdi: getUserProfile ${DBRef.child(phoneNum).get()}");
+      return DBRef.child(phoneNum).get();
+    } catch (e) {
+      print("Mahdi: getUserProfile: error $e");
+      return null;
+    }
+  }
+
   Future<void> addContact({
     String userName,
-    String email,
-    String userId,
     bool isOnline,
+    String phoneNum,
+    String uId,
   }) async {
     try {
-      await DBRef.child(userId).set(
-        {
-          "userName": userName,
-          "email": email,
-          "isOnline": isOnline,
-        },
-      );
+      final SharedPreferences prefs = await _prefs;
+
+      await DBRef.child(phoneNum).get().then((value) async {
+        print("Mahdi: addContact: get: ${value.value}");
+        if (value.value == null) {
+          await DBRef.child(phoneNum).set(
+            {
+              "userName": userName,
+              "isOnline": isOnline,
+              "isInVisible": "true",
+              "Phone Number": phoneNum,
+              "uId": uId,
+            },
+          );
+          prefs.setString(PHONE_NUMBER_KEY, phoneNum);
+        } else {
+          await DBRef.child(phoneNum).set(
+            {
+              "userName": value.value["userName"],
+              "isOnline": isOnline,
+              "isInVisible": value.value["isInVisible"],
+              "Phone Number": value.value["Phone Number"],
+              "uId": uId,
+            },
+          );
+          prefs.setString(PHONE_NUMBER_KEY, phoneNum);
+        }
+      });
     } catch (e) {
       print("Mahdi: addContact: error: $e");
     }
   }
 
-  // _tempUserList.putIfAbsent(
-  //   UserModel(
-  //     email: value["email"],
-  //     userName: value["userName"],
-  //     userId: key,
-  //     isOnline: value["isOnline"],
-  //   ),
+  Future<void> saveProfile({
+    String userName,
+    bool isOnline,
+    bool isInVisible,
+    String phoneNum,
+    String uId,
+  }) async {
+    try {
+      final SharedPreferences prefs = await _prefs;
+
+      print("Mahdi: saveProfile: ");
+
+      await DBRef.child(phoneNum).set(
+        {
+          "userName": userName,
+          "isOnline": isOnline,
+          "isInVisible": isInVisible,
+          "Phone Number": phoneNum,
+          "uId": uId,
+        },
+      );
+      prefs.setString(PHONE_NUMBER_KEY, phoneNum);
+    } catch (e) {
+      print("Mahdi: saveProfile: error: $e");
+    }
+  }
 
   Future<void> getAllContacts() async {
     try {
@@ -71,6 +126,7 @@ class ContactsList extends ChangeNotifier {
                     "email": value["email"],
                     "userName": value["userName"],
                     "isOnline": value["isOnline"],
+                    "uId": value["uId"],
                   });
         });
       });
@@ -93,6 +149,7 @@ class ContactsList extends ChangeNotifier {
                   "email": event.snapshot.value["email"],
                   "userName": event.snapshot.value["userName"],
                   "isOnline": event.snapshot.value["isOnline"],
+                  "uId": event.snapshot.value["uId"],
                 });
         notifyListeners();
       });
@@ -110,6 +167,7 @@ class ContactsList extends ChangeNotifier {
           "email": event.snapshot.value["email"],
           "userName": event.snapshot.value["userName"],
           "isOnline": event.snapshot.value["isOnline"],
+          "uId": event.snapshot.value["uId"],
         };
         notifyListeners();
       });
